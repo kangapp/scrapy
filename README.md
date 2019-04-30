@@ -95,4 +95,69 @@ scrapy shell http://blog.jobbole.com/114690/  //进入scrapy交互界面，方�
 |/div/*      |选取属于div元素的所有子节点|
 |//*         |选取所有元素              |
 |//div[@*]   |选取所有带属性的div元素|
-|//div/a|//div/p      |选取所有div元素的a和p元素|
+|//div/a|//div/p      |选取所有div元素的a和p元素|  
+
+```
+# -*- coding: utf-8 -*-
+import scrapy
+import re
+
+
+class JobboleSpider(scrapy.Spider):
+    name = 'jobbole'
+    allowed_domains = ['blog.jobbole.com']
+    start_urls = ['http://blog.jobbole.com/114690/']
+
+    def parse(self, response):
+        # 返回符合条件的Selctor的集合SelectorList
+        re_selector = response.xpath('//div[@class="entry"]/p/text()')
+        # 返回Selector的data数据的集合
+        re_value = re_selector.extract()
+
+        reger_date = ".*(\d{4}/\d{2}/\d{2}).*"
+        reger_num = ".*?(\d+).*"
+
+        title = response.xpath('//div[@class="entry-header"]/h1/text()').extract_first()
+        create_date = str(response.xpath('//p[@class="entry-meta-hide-on-mobile"]/text()').extract_first()).strip()
+        match_re = re.match(reger_date, create_date)
+        if match_re:
+            create_date = match_re.group(1)
+        prase_nums = response.xpath('//span[contains(@class, "vote-post-up")]/h10/text()').extract_first()
+        fav_nums = response.xpath('//span[contains(@class, "bookmark-btn")]/text()').extract_first()
+        match_re = re.match(reger_num, fav_nums)
+        if match_re:
+            fav_nums = match_re.group(1)
+        comment_nums = response.xpath('//a[@href="#article-comment"]/span/text()').extract_first()
+        match_re = re.match(reger_num, comment_nums)
+        if match_re:
+            comment_nums = match_re.group(1)
+        pass
+
+```
+
+#### css选择器
+
+|表达式     |说明        |
+|-----------|-----------|
+|#container      |选择id为container的节点|
+|.container     |选择所有class包含container节点|
+|li a          |选择所有li下的所有a节点|
+|ul + p          |选择ul后面的第一个p元素|
+|div#container > ul |选择id为container的div的第一个ul子元素|
+|ul ~ p          |选择与ul相邻的所有p元素|
+|a[title]          |选择所有有title属性的a元素|
+|a[href="jobbole"]   |选择所有href属性为jobbole值的a元素|
+|a[href*="jobbole"]   |选择所有href属性包含jobbole值的a元素|
+|a[href^="http"]   |选择所有href属性以http开头的a元素|
+|a[href$=".jpg"]   |选择所有href属性以.jpg结尾的a元素|
+|input[type=radio]:checked  |选择选中的radio的元素|
+|div:not(#container)          |选择所有id非container的div属性|
+|li:nth-child(3)      |选择第三个li元素 |
+|tr:nth-child(2n)     |选择第偶数个tr|
+
+```
+# 返回符合条件的Selctor的集合SelectorList
+re_selector = response.xpath('.entry p::text')
+# 返回Selector的data数据的集合
+re_value = re_selector.extract()
+```
